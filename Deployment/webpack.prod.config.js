@@ -2,8 +2,16 @@ const path = require('path');
 const HtmlPlugin = require("html-webpack-plugin");
 const CopyPlugin = require("copy-webpack-plugin");
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
+const glob = require('glob');
+const {PurgeCSSPlugin} = require("purgecss-webpack-plugin");
+
+const PATHS = {
+    src : path.join(__dirname , "src")
+};
 
 module.exports = {
+    mode : "production" , 
     entry : {
         index : "./src/index.js" , 
         explore : "./src/explore.js"
@@ -14,7 +22,22 @@ module.exports = {
         assetModuleFilename : "asset/[hash][ext]",
         clean : true
     } , 
+    devtool : "source-map" ,
+    optimization :{
+        minimizer : [
+            `...` , 
+            new CssMinimizerPlugin()
+        ] , 
+        splitChunks : {
+            chunks : "all"
+        }
+    } ,
     plugins : [
+        new PurgeCSSPlugin({
+            paths : glob.sync(`${PATHS.src}/**/*`, {nodir : true}),
+            only : ["explore"] , 
+            safelist : ["unused-css"]
+        }) , 
         new MiniCssExtractPlugin(),
         new HtmlPlugin({
             template : "./src/index.html",
